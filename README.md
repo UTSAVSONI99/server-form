@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Contact Form Implementation Procedure
 
-## Getting Started
+This document describes the procedure followed for implementing the contact form, including the use of server actions and Google reCAPTCHA for spam protection.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 1. Form Structure (Client Side)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- The form is implemented in `app/contact/page.tsx` using React and Next.js.
+- It uses custom UI components for fields, labels, and input elements.
+- The form includes fields for **Name**, **Email**, **Phone**, and **Message**.
+- Google reCAPTCHA is integrated using the `react-google-recaptcha` package to prevent spam submissions.
+- The reCAPTCHA token is stored in a React state and sent as a hidden input (`captchaToken`) with the form data.
+- The submit button is disabled until the reCAPTCHA is completed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Server Action Handling
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- The form uses a server action (`handleContact`) defined in `app/contact/action.ts`.
+- The server action is invoked using Next.js's `useActionState` hook, which manages form state and handles submission.
+- On submission, the form data is sent to the server action for processing.
 
-## Learn More
+## 3. reCAPTCHA Verification (Server Side)
 
-To learn more about Next.js, take a look at the following resources:
+- The server action receives the form data, including the `captchaToken`.
+- It sends a POST request to Google's reCAPTCHA verification endpoint (`https://www.google.com/recaptcha/api/siteverify`) with:
+  - The secret key (from environment variable `RECAPTCHA_SECRET_KEY`)
+  - The response token from the client
+- The response from Google is checked for success. If verification fails, an error is returned.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 4. Validation and Response
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- The server action validates required fields (name, email, message) and checks for a valid email format and minimum message length.
+- If any validation fails, an appropriate error message is returned to the client.
+- If all checks pass, a success message is returned (actual message sending logic can be added as needed).
 
-## Deploy on Vercel
+## 5. User Feedback
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- The client displays error or success messages based on the server action's response.
+- The submit button shows a loading state while the form is being submitted.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## File Overview
+
+- `app/contact/page.tsx`: Form UI, client-side logic, reCAPTCHA integration.
+- `app/contact/submitform.tsx`: Submit button component with loading state.
+- `app/contact/action.ts`: Server action for form handling, validation, and reCAPTCHA verification.
+
+---
+
+## Environment Variables Required
+
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`: Public site key for reCAPTCHA (used on the client).
+- `RECAPTCHA_SECRET_KEY`: Secret key for reCAPTCHA (used on the server).
+
+---
+
+## Security Notes
+
+- reCAPTCHA helps prevent automated spam submissions.
+- All sensitive validation and verification are performed server-side.
+
+---
+
+
+**End of Procedure**
